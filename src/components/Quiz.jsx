@@ -1,31 +1,38 @@
-import { useState } from 'react';
-import QUESTIONS from "../questions.js";
+import { useState, useCallback } from "react";
+import QUESTIONS from "../questions";
+import Summary from "./Summary.jsx";
+import Question from "./Question.jsx";
 
 export default function Quiz() {
-    const [userAnswers, setUserAnswers] = useState([]);
-    const activeQuestionIndex = userAnswers.length;
-    const shuffledAnswers = [...QUESTIONS[activeQuestionIndex].answers]; 
-    shuffledAnswers.sort((a, b) => -1); 
+  const [userAnswers, setUserAnswers] = useState([]);
 
+  const activeQuestionIndex = userAnswers.length;
+  const quizIsComplete = activeQuestionIndex === QUESTIONS.length;
 
-    function handleSelectAnswer(selectedAnswer) {
-        setUserAnswers((prevUserAnswers) => {
-            return [...prevUserAnswers, selectedAnswer]; 
-        });
-    }
+  const handleSelectAnswer = useCallback((selectedAnswer) => {
+    setUserAnswers((prevUserAnswers) => {
+      return [...prevUserAnswers, selectedAnswer];
+    });
+  }, []);
 
-    return (
-        <div id="quiz">
-            <div id="question">
-                <h2>{QUESTIONS[activeQuestionIndex].text}</h2>
-                <ul id="answers">
-                    {QUESTIONS[activeQuestionIndex].answers.map((answer) => (
-                        <li key={answer} className="answer">
-                            <button onClick={() => handleSelectAnswer(answer)}>{answer}</button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    );
+  const handleSkipAnswer = useCallback(() => {
+    handleSelectAnswer(null);
+  }, [handleSelectAnswer]);
+
+  if (quizIsComplete) {
+    return <Summary userAnswers={userAnswers} />;
+  }
+
+  return (
+    <div id="quiz">
+      <Question
+        questionText={QUESTIONS[activeQuestionIndex].text}
+        answers={QUESTIONS[activeQuestionIndex].answers}
+        onSelectAnswer={handleSelectAnswer}
+        onSkipAnswer={handleSkipAnswer}
+        key={activeQuestionIndex}
+        questionIndex={activeQuestionIndex}
+      />
+    </div>
+  );
 }
